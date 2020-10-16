@@ -1,0 +1,71 @@
+---
+apiVersion: v1
+data:
+  flume.conf: |
+    # Name the components on this agent
+    a1.sources = r1
+    a1.sinks = k1
+    a1.channels = c1
+ 
+    # Describe/configure the source
+    a1.sources.r1.type = exec
+    a1.sources.r1.command = tail -F /logs/messages
+
+    # Describe the sink
+    a1.sinks.k1.type = hdfs
+    a1.sinks.k1.hdfs.path = hdfs://hbase-hdfs-nn:9000/output
+    a1.sinks.k1.hdfs.writeFormat = Text
+    a1.sinks.k1.hdfs.fileType = DataStream
+    a1.sinks.k1.hdfs.rollInterval = 10
+    a1.sinks.k1.hdfs.rollSize = 0
+    a1.sinks.k1.hdfs.rollCount = 0
+    a1.sinks.k1.hdfs.filePrefix = %Y-%m-%d-%H
+    a1.sinks.k1.hdfs.useLocalTimeStamp = true 
+ 
+    # Use a channel which buffers events in file
+    a1.channels.c1.type = memory
+    a1.channels.c1.capacity = 100000
+    a1.channels.c1.transactionCapacity = 60000
+ 
+    # Bind the source and sink to the channel
+    a1.sources.r1.channels = c1
+    a1.sinks.k1.channel = c1
+kind: ConfigMap
+metadata:
+  name: flume 
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: flume 
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      run: flume
+  template:
+    metadata:
+      labels:
+        run: flume
+    spec:
+      volumes:
+      - name: logs
+        hostPath:
+          path: /var/log
+      - name: conf
+        configMap:
+          name: flume
+      containers:
+      - name: app
+        image: registry.cn-hangzhou.aliyuncs.com/lvxw_test/k8s-flume-1.9.0:v1 
+        volumeMounts:
+        - mountPath: /logs
+          name: logs
+        - mountPath: /tmp
+          name: conf
+        args:
+        - /bin/sh
+        - -c
+        - /usr/local/apache-flume-1.9.0-bin/bin/flume-ng agent --name a1 --conf conf --conf-file /tmp/flume.conf -Dflume.root.logger=INFO,console
