@@ -31,3 +31,12 @@
 > cd sparkoperator
 
 > helm install spark -n spark-operator .
+
+# TODO
+
+* KAFKA
+* FLINK
+* Mysql
+* Mongo
+* Elasticsearch
+* Redis
