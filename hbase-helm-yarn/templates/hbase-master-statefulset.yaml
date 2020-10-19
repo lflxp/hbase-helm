@@ -62,4 +62,4 @@ spec:
       volumes:
       - name: hbase-config
         configMap:
-          name: hbase-configmap
+          name: hbase-configmap 

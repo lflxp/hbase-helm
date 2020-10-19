@@ -77,7 +77,7 @@ spec:
       volumes:
       - name: hadoop-config
         configMap:
-          name: hadoop-configmap
+          name: {{ template "hadoop.fullname" . }} 
       - name: dfs
       {{- if .Values.persistence.dataNode.enabled }}
         persistentVolumeClaim:
